@@ -1,0 +1,621 @@
+import json
+import math
+import os
+import random
+import sys
+import googlemaps
+import numpy as np
+from geopy.geocoders import Nominatim
+import folium
+
+class SimulatedAnnealing:
+    def  __init__(self,cities,num_cities, temperature=2000,iterations_per_temp=100, lowest_temperature=5):
+        # Initialize variables for simulated annealing
+        """
+        Initializes the SimulatedAnnealing class.
+
+        Args:
+            cities (list): List of city names.
+            num_cities (int): Number of cities to include in the TSP.
+            temperature (int): Initial temperature.
+            lowest_temperature (int): The lowest temperature to which the algorithm will be cooled.
+            iterations_per_temp (int): The number of iterations per temperature.
+        """
+        self.graph = {}
+        self.country = "Israel"
+        self.cities = cities
+        self.num_cities = num_cities
+        self.temperature = temperature
+        self.lowest_temperature = lowest_temperature
+        self.iterations_per_temp = iterations_per_temp
+        self.tour = cities
+        self.best_tour = []
+        self.best_cost_to_date = float('inf')
+        self.down_hill_moves = 0
+        self.uphill_moves = 0
+        self.rejected_moves = 0
+        self.inverse_ops = 0
+        self.swap_ops = 0
+        self.insert_ops = 0
+        self.previous_cost = 0
+
+    def cost(self, tour):
+        # Calculate the total cost of a given tour
+        """
+        Calculates the total cost of a given tour.
+
+        Args:
+            tour (list): List of city indices in the order they are visited.
+
+        Returns:
+            float: Total cost of the tour.
+        """
+        distances = np.array([self.graph[tour[i]][tour[i + 1]] for i in range(len(tour) - 1)])
+        distances = np.append(distances, self.graph[tour[-1]][tour[0]])
+        return np.sum(distances)
+
+    def inverse_operation(self, tour):
+        """
+        Perform an inverse operation by inverting a section of the tour.
+
+        Args:
+            tour (list): List of city indices in the order they are visited.
+
+        Returns:
+            list: The modified tour.
+        """
+        first_index = random.randint(1, len(tour) - 2)  # Avoid modifying the first or last city
+        second_index = random.randint(1, len(tour) - 2)
+
+        while first_index == second_index:
+            second_index = random.randint(1, len(tour) - 2)
+        if first_index > second_index:
+            first_index, second_index = second_index, first_index
+
+        tour[first_index:second_index + 1] = reversed(tour[first_index:second_index + 1])
+        tour[-1] = tour[0]  # Ensure the tour is closed
+        return tour
+
+    def swap(self, tour):
+        """
+        Perform the swap operation by swapping two cities in the tour.
+
+        Args:
+            tour (list): List of city indices in the order they are visited.
+
+        Returns:
+            list: The modified tour.
+        """
+        first_index = random.randint(1, len(tour) - 2)  # Avoid the first or last city
+        second_index = random.randint(1, len(tour) - 2)
+
+        while first_index == second_index:
+            second_index = random.randint(1, len(tour) - 2)
+
+        tour[first_index], tour[second_index] = tour[second_index], tour[first_index]
+        tour[-1] = tour[0]  # Ensure the tour is closed
+        return tour
+
+    def insert(self, tour):
+        """
+        Perform the insert operation by removing a city from its current position and inserting it at another position in the tour.
+
+        Args:
+            tour (list): List of city indices in the order they are visited.
+
+        Returns:
+            list: The modified tour.
+        """
+        first_index = random.randint(1, len(tour) - 2)  # Avoid the first or last city
+        second_index = random.randint(1, len(tour) - 2)
+
+        while first_index == second_index:
+            second_index = random.randint(1, len(tour) - 2)
+
+        element = tour.pop(second_index)
+        tour.insert(first_index, element)
+        tour[-1] = tour[0]  # Ensure the tour is closed
+        return tour
+
+    def choose_random_routes(self, num_cities):
+        """
+        Randomly selects a subset of cities for the initial tour.
+
+        Args:
+            num_cities (int): The number of cities to include in the subset.
+
+        Returns:
+            list: A random subset of cities.
+        """
+        return random.sample(self.cities, self.num_cities)
+
+    def get_random_operation(self):
+        """
+        Randomly selects an operation to perform on the tour.
+
+        Returns:
+            function: The selected operation function.
+        """
+        operations = [self.inverse_operation, self.swap, self.insert]
+        return random.choice(operations)
+
+    def simulated_annealing1(self):
+        """
+        Main simulated annealing algorithm.
+        Choose an initial random tour from the cities.
+        Perform the annealing process for a fixed number of iterations.
+        Generate new tours using different operations.
+        Choose the best cost among the generated tours.
+        Update the tour and statistics based on the operation used.
+        Perform Metropolis acceptance for uphill moves.
+        Cooling the temperature based on predefined rules.
+        Print the final results.
+        """
+        self.cities.append(self.cities[0])  # Add the starting city to the end to form a closed tour
+
+        # Print the cost of the initial tour
+        print(f"Cost for initial tour is: {self.cost(self.cities)}")
+        self.best_tour = self.cities[:]  # Initialize the best tour as the current tour
+        self.best_cost_to_date = self.cost(self.cities)  # Initialize the best cost
+        self.previous_cost = self.best_cost_to_date  # Store the cost of the last accepted tour
+
+        while self.temperature > self.lowest_temperature:
+            # Perform the annealing process for a fixed number of iterations
+            for _ in range(int(self.iterations_per_temp)):
+                # Generate new tours using different operations
+                tour1 = self.inverse_operation(self.tour[:])  # Reverse a segment of the tour
+                cost1 = self.cost(tour1)  # Calculate the cost of the modified tour
+
+                tour2 = self.swap(self.tour[:])  # Swap two cities in the tour
+                cost2 = self.cost(tour2)  # Calculate the cost of the modified tour
+
+                tour3 = self.insert(self.tour[:])  # Insert a city into a different position
+                cost3 = self.cost(tour3)  # Calculate the cost of the modified tour
+
+                # Choose the best cost among the generated tours
+                new_cost = min(cost1, cost2, cost3)
+
+
+                # Update the tour and statistics based on the operation used
+                if new_cost == cost1:
+                    self.inverse_ops += 1  # Increment the count of inverse operations
+                    if new_cost < self.previous_cost:
+                        self.down_hill_moves += 1  # Track downhill moves
+                        self.previous_cost = new_cost
+                        self.tour = tour1[:]  # Accept the new tour
+                        if new_cost < self.best_cost_to_date:
+                            self.best_cost_to_date = new_cost  # Update the best cost
+                            self.best_tour = tour1[:]  # Update the best tour
+                            print(f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}C\n")
+                    else:
+                        # Perform Metropolis acceptance for uphill moves
+                        metropolis = math.exp((self.previous_cost - new_cost) / self.temperature)
+                        r = random.random()
+                        if r <= metropolis:
+                            self.uphill_moves += 1  # Track uphill moves
+                            self.previous_cost = new_cost
+                            self.tour = tour1[:]  # Accept the new tour
+                            if new_cost < self.best_cost_to_date:
+                                self.best_cost_to_date = new_cost
+                                self.best_tour = tour1[:]
+                                print(
+                                    f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}\n")
+                            else:
+                                self.rejected_moves += 1  # Track rejected move
+
+
+                elif new_cost == cost2:
+                    self.swap_ops += 1  # Increment the count of swap operations
+                    if new_cost < self.previous_cost:
+                        self.down_hill_moves += 1  # Track downhill moves
+                        self.previous_cost = new_cost
+                        self.tour = tour2[:]  # Accept the new tour
+                        if new_cost < self.best_cost_to_date:
+                            self.best_cost_to_date = new_cost
+                            self.best_tour = tour2[:]  # Update the best tour
+                            print(
+                                f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}C\n")
+                    else:
+                        # Perform Metropolis acceptance for uphill moves
+                        metropolis = math.exp((self.previous_cost - new_cost) / self.temperature)
+                        r = random.random()
+                        if r <= metropolis:
+                            self.uphill_moves += 1  # Track uphill moves
+                            self.previous_cost = new_cost
+                            self.tour = tour2[:]  # Accept the new tour
+                            if new_cost < self.best_cost_to_date:
+                                self.best_cost_to_date = new_cost
+                                self.best_tour = tour2[:]
+                                print(
+                                    f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}\nC")
+                            else:
+                                self.rejected_moves += 1  # Track rejected moves
+
+
+                elif new_cost == cost3:
+                    self.insert_ops += 1  # Increment the count of insert operations
+                    if new_cost < self.previous_cost:
+                        self.down_hill_moves += 1  # Track downhill moves
+                        self.previous_cost = new_cost
+                        self.tour = tour3[:]  # Accept the new tour
+                        if new_cost < self.best_cost_to_date:
+                            self.best_cost_to_date = new_cost
+                            self.best_tour = tour3[:]  # Update the best tour
+                            print(
+                                f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}C\n")
+                    else:
+                        # Perform Metropolis acceptance for uphill moves
+                        metropolis = math.exp((self.previous_cost - new_cost) / self.temperature)
+                        r = random.random()
+                        if r <= metropolis:
+                            self.uphill_moves += 1  # Track uphill moves
+                            self.previous_cost = new_cost
+                            self.tour = tour3[:]  # Accept the new tour
+                            if new_cost < self.best_cost_to_date:
+                                self.best_cost_to_date = new_cost
+                                self.best_tour = tour3[:]
+                                print(
+                                    f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}C\n")
+                            else:
+                                self.rejected_moves += 1  # Track rejected moves
+                """if _ % 100 == 0:
+                    self.tour = self.get_random_operation()(self.tour[:])
+                    new_cost = self.cost(self.tour)
+                    if new_cost < self.best_cost_to_date:
+                        self.best_cost_to_date = new_cost
+                        self.best_tour = self.tour[:]
+                        print(
+                            f"[Shake] Found better cost: {round(new_cost, 3)} at temp {round(self.temperature, 2)}C\n")"""
+            # Cooling the temperature based on predefined rules
+            self.temperature *= 0.999
+
+        # Print the final results
+        print("\n==== Final Results ====")
+        print("Best tour: \n")
+        for _, city in zip(range(len(self.best_tour)), self.best_tour):
+            print(f"{_ + 1}.{city}")
+        print(f"Best cost: {round(self.best_cost_to_date, 3)}")
+
+        self.print_summary()
+
+    def simulated_annealing(self):
+        """
+        Main simulated annealing algorithm.
+        Choose an initial random tour from the cities.
+        Perform the annealing process for a fixed number of iterations.
+        Generate new tours using different operations.
+        Choose the best cost among the generated tours.
+        Update the tour and statistics based on the operation used.
+        Perform Metropolis acceptance for uphill moves.
+        Cooling the temperature based on predefined rules.
+        Print the final results.
+        """
+        self.cities.append(self.cities[0])  # Add the starting city to the end to form a closed tour
+
+        # Print the cost of the initial tour
+        print(f"Cost for initial tour is: {self.cost(self.cities)}")
+        self.best_tour = self.cities[:]  # Initialize the best tour as the current tour
+        self.best_cost_to_date = self.cost(self.cities)  # Initialize the best cost
+        self.previous_cost = self.best_cost_to_date  # Store the cost of the last accepted tour
+
+        while self.temperature > self.lowest_temperature:
+            # Perform the annealing process for a fixed number of iterations
+            for _ in range(int(self.iterations_per_temp)):
+                # Generate new tours using different operations
+                tour1 = self.inverse_operation(self.tour[:])  # Reverse a segment of the tour
+                cost1 = self.cost(tour1)  # Calculate the cost of the modified tour
+
+                tour2 = self.swap(self.tour[:])  # Swap two cities in the tour
+                cost2 = self.cost(tour2)  # Calculate the cost of the modified tour
+
+                tour3 = self.insert(self.tour[:])  # Insert a city into a different position
+                cost3 = self.cost(tour3)  # Calculate the cost of the modified tour
+
+                # Choose the best cost among the generated tours
+                new_cost = min(cost1, cost2, cost3)
+
+                # Update the tour and statistics based on the operation used
+                if new_cost == cost1:
+                    self.inverse_ops += 1  # Increment the count of inverse operations
+                    if new_cost < self.previous_cost:
+                        self.down_hill_moves += 1  # Track downhill moves
+                        self.previous_cost = new_cost
+                        self.tour = tour1[:]  # Accept the new tour
+                        if new_cost < self.best_cost_to_date:
+                            self.best_cost_to_date = new_cost  # Update the best cost
+                            self.best_tour = tour1[:]  # Update the best tour
+                            print(f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}C\n")
+                    else:
+                        # Perform Metropolis acceptance for uphill moves
+                        metropolis = math.exp((self.previous_cost - new_cost) / self.temperature)
+                        r = random.random()
+                        if r <= metropolis:
+                            self.uphill_moves += 1  # Track uphill moves
+                            self.previous_cost = new_cost
+                            self.tour = tour1[:]  # Accept the new tour
+                            if new_cost < self.best_cost_to_date:
+                                self.best_cost_to_date = new_cost
+                                self.best_tour = tour1[:]
+                                print(
+                                    f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}\n")
+                            else:
+                                self.rejected_moves += 1  # Track rejected move
+
+
+                elif new_cost == cost2:
+                    self.swap_ops += 1  # Increment the count of swap operations
+                    if new_cost < self.previous_cost:
+                        self.down_hill_moves += 1  # Track downhill moves
+                        self.previous_cost = new_cost
+                        self.tour = tour2[:]  # Accept the new tour
+                        if new_cost < self.best_cost_to_date:
+                            self.best_cost_to_date = new_cost
+                            self.best_tour = tour2[:]  # Update the best tour
+                            print(
+                                f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}C\n")
+                    else:
+                        # Perform Metropolis acceptance for uphill moves
+                        metropolis = math.exp((self.previous_cost - new_cost) / self.temperature)
+                        r = random.random()
+                        if r <= metropolis:
+                            self.uphill_moves += 1  # Track uphill moves
+                            self.previous_cost = new_cost
+                            self.tour = tour2[:]  # Accept the new tour
+                            if new_cost < self.best_cost_to_date:
+                                self.best_cost_to_date = new_cost
+                                self.best_tour = tour2[:]
+                                print(
+                                    f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}\nC")
+                            else:
+                                self.rejected_moves += 1  # Track rejected moves
+
+
+                elif new_cost == cost3:
+                    self.insert_ops += 1  # Increment the count of insert operations
+                    if new_cost < self.previous_cost:
+                        self.down_hill_moves += 1  # Track downhill moves
+                        self.previous_cost = new_cost
+                        self.tour = tour3[:]  # Accept the new tour
+                        if new_cost < self.best_cost_to_date:
+                            self.best_cost_to_date = new_cost
+                            self.best_tour = tour3[:]  # Update the best tour
+                            print(
+                                f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}C\n")
+                    else:
+                        # Perform Metropolis acceptance for uphill moves
+                        metropolis = math.exp((self.previous_cost - new_cost) / self.temperature)
+                        r = random.random()
+                        if r <= metropolis:
+                            self.uphill_moves += 1  # Track uphill moves
+                            self.previous_cost = new_cost
+                            self.tour = tour3[:]  # Accept the new tour
+                            if new_cost < self.best_cost_to_date:
+                                self.best_cost_to_date = new_cost
+                                self.best_tour = tour3[:]
+                                print(
+                                    f"New best cost: {round(self.best_cost_to_date, 3)} at temperature {round(self.temperature, 3)}C\n")
+                            else:
+                                self.rejected_moves += 1  # Track rejected moves
+
+
+            # Cooling the temperature based on predefined rules
+            if self.temperature >= 1000:
+                self.temperature *= 0.9
+            elif self.temperature >= 500:
+                self.temperature *= 0.94
+            elif self.temperature >= 200:
+                self.temperature *= 0.97
+            elif self.temperature >= 50:
+                self.temperature *= 0.98
+            else:
+                self.temperature *= 0.999
+
+        # Print the final results
+        print("\n==== Final Results ====")
+        print("Best tour: \n")
+        for _, city in zip(range(len(self.best_tour)), self.best_tour):
+            print(f"{_ + 1}.{city}")
+        print(f"Best cost: {round(self.best_cost_to_date, 3)}")
+
+        self.print_summary()
+
+
+    def create_graph(self, api_key, cities, graph):
+        """
+        Create the graph of distances between cities using Google Maps API
+
+        Args:
+            api_key (str): Google Maps API key
+            cities (list): List of city names
+            graph (dict): Graph of distances between cities
+
+        Returns:
+            dict: The graph of distances between cities
+        """
+        distance_cache = self.load_distance_cache()
+
+        for origin in cities:
+            if origin not in graph:
+                graph[origin] = {}
+            for destination in cities:
+                if origin == destination:
+                    graph[origin][destination] = 0.0
+                elif destination not in graph[origin]:
+                    if destination not in graph:
+                        graph[destination] = {}
+                    distance = self.calculate_distances(api_key, origin, destination, distance_cache)
+                    graph[origin][destination] = distance
+                    graph[destination][origin] = distance
+
+        self.save_distance_cache(distance_cache)
+        return graph
+
+    def calculate_distances(self, api_key, origin, destination, distance_cache):
+        # Calculate or retrieve the distance between two cities
+        """
+        Calculate or retrieve the distance between two cities.
+
+        Args:
+            api_key (str): Google Maps API key
+            origin (str): Origin city name
+            destination (str): Destination city name
+            distance_cache (dict): Cache for previously calculated distances
+
+        Returns:
+            float: Distance between the two cities
+        """
+        key = f"{origin}-{destination}"
+        reverse_key = f"{destination}-{origin}"
+
+        if key in distance_cache:
+            sys.stdout.write(f"Distance between {origin} and {destination} retrieved from cache.\n")
+            return distance_cache[key]
+        if reverse_key in distance_cache:
+            sys.stdout.write(f"Distance between {origin} and {destination} retrieved from cache.\n")
+            return distance_cache[reverse_key]
+
+        try:
+            sys.stdout.write(f"Calculating distance between {origin} and {destination} using Google Maps API.\n")
+            gmaps = googlemaps.Client(key=api_key)
+            result = gmaps.distance_matrix(origin + "," + self.country, destination + "," + self.country, units="metric")
+
+            if result["rows"][0]["elements"][0]["status"] == "OK":
+                distance = result["rows"][0]["elements"][0]["distance"]["value"] / 1000.0
+                distance_cache[key] = distance
+                distance_cache[reverse_key] = distance
+                return distance
+            else:
+                sys.stdout.write(f"Error: Could not retrieve distance between {origin} and {destination}.\n")
+                return float('inf')
+        except Exception as e:
+            sys.stdout.write(f"Exception occurred: {e}")
+            return float('inf')
+
+    def load_distance_cache(self, filename=None):
+        """
+        Loads cached distances from a file.
+
+        Args:
+            filename (str): The name of the file to load the cache from. If None, uses default path.
+
+        Returns:
+            dict: The cached distances.
+        """
+        if filename is None:
+            base_dir = os.path.dirname(__file__)
+            filename = os.path.join(base_dir, "distances.json")
+
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                return json.load(file)
+        return {}
+
+    def save_distance_cache(self, cache, filename=None):
+        """
+        Save the distance cache to a file.
+
+        Args:
+            cache (dict): The cache to save.
+            filename (str): The name of the file to save the cache to. If None, uses default path.
+        """
+        if filename is None:
+            base_dir = os.path.dirname(__file__)
+            filename = os.path.join(base_dir, "distances.json")
+
+        with open(filename, "w") as file:
+            json.dump(cache, file, indent=4)
+
+    def initialize_graph(self, api_key):
+        # Initialize the graph of distances between cities
+        """
+        Initialize the graph of distances between cities.
+
+        Args:
+            api_key (str): The Google Maps API key to use for calculating distances.
+
+        Returns:
+            dict: The graph of distances between cities.
+
+        If the graph has already been initialized, this does nothing and returns the existing graph.
+        Otherwise, it calls `create_graph` and stores the result in `self.graph`.
+        """
+        if self.graph:
+            sys.stdout.write("Graph already initialized.\n")
+            return self.graph
+
+        sys.stdout.write("Creating graph...\n")
+        self.graph = self.create_graph(api_key, self.cities, {})
+        return self.graph
+
+
+    def print_summary(self):
+        """
+        Print a summary of the simulated annealing process.
+
+        The summary includes:
+
+        - The best tour found so far
+        - The best cost found so far
+        - The current temperature
+        - The number of downhill moves
+        - The number of uphill moves
+        - The number of rejected moves
+        - The number of inverse operations
+        - The number of swap operations
+        - The number of insert operations
+        """
+        sys.stdout.write("\n==== Summary ====\n")
+        sys.stdout.write(f"Temperature: {self.temperature}\n")
+        sys.stdout.write(f"Downhill moves: {self.down_hill_moves}\n")
+        sys.stdout.write(f"Uphill moves: {self.uphill_moves}\n")
+        sys.stdout.write(f"Rejected moves: {self.rejected_moves}\n")
+        sys.stdout.write(f"Inverse operations: {self.inverse_ops}\n")
+        sys.stdout.write(f"Swap operations: {self.swap_ops}\n")
+        sys.stdout.write(f"Insert operations: {self.insert_ops}\n")
+
+    def generate_map(self):
+        """
+        Generate a map of the best tour using Folium.
+
+        Returns:
+            str: The path to the saved HTML file.
+        """
+        geolocator = Nominatim(user_agent="tsp_solver")
+        locations = []
+        sys.stdout.write("Generating Map...\n")
+        for city in self.best_tour:
+            location = geolocator.geocode(f"{city}, {self.country}")
+            if location:
+                locations.append((location.latitude, location.longitude))
+
+        if not locations:
+            sys.stdout.write("No valid locations found for the best path.\n")
+            return None
+
+        tsp_map = folium.Map(location=locations[0], zoom_start=8)
+
+        # Only iterate through locations until the one before the last
+        for idx, (lat, lon) in enumerate(locations[:-1]):
+            if idx == 0:  # Start and End point
+                popup_text = f"1 & {len(locations)}: {self.best_tour[idx]}"
+                folium.Marker(
+                    location=(lat, lon),
+                    popup=popup_text,
+                    tooltip=popup_text,
+                    icon=folium.Icon(color='red')  # Set marker color to red
+                ).add_to(tsp_map)
+            else:  # Intermediate points
+                popup_text = f"{idx + 1}: {self.best_tour[idx]}"
+                folium.Marker(
+                    location=(lat, lon),
+                    popup=popup_text,
+                    tooltip=popup_text
+                ).add_to(tsp_map)
+
+        folium.PolyLine(locations, color="blue", weight=2.5, opacity=1).add_to(tsp_map)
+
+        map_file = os.path.join(os.getcwd(), "tsp_map.html")
+        tsp_map.save(map_file)
+        sys.stdout.write(f"Map generated!")
+        return map_file
+

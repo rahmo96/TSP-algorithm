@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_d2ec76b56689b43a5d8b9e95f7631a43 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_d2ec76b56689b43a5d8b9e95f7631a43" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_d2ec76b56689b43a5d8b9e95f7631a43 = L.map(
+                "map_d2ec76b56689b43a5d8b9e95f7631a43",
+                {
+                    center: [32.3286181, 34.8566246],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 8,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_c0124bd66cbf2fd944848ae73325e35d = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_c0124bd66cbf2fd944848ae73325e35d.addTo(map_d2ec76b56689b43a5d8b9e95f7631a43);
+        
+    
+            var marker_38c571d70800f690265c974356b439e4 = L.marker(
+                [32.3286181, 34.8566246],
+                {
+}
+            ).addTo(map_d2ec76b56689b43a5d8b9e95f7631a43);
+        
+    
+            var icon_8f66fdedc7adf7024c379873d888efa3 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "info-sign",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_36de6223f74c39c1ffde9ca399490383 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d0bc789009976560cb994b539d7a3099 = $(`<div id="html_d0bc789009976560cb994b539d7a3099" style="width: 100.0%; height: 100.0%;">1 & 6: Netanya</div>`)[0];
+                popup_36de6223f74c39c1ffde9ca399490383.setContent(html_d0bc789009976560cb994b539d7a3099);
+            
+        
+
+        marker_38c571d70800f690265c974356b439e4.bindPopup(popup_36de6223f74c39c1ffde9ca399490383)
+        ;
+
+        
+    
+    
+            marker_38c571d70800f690265c974356b439e4.bindTooltip(
+                `<div>
+                     1 & 6: Netanya
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_38c571d70800f690265c974356b439e4.setIcon(icon_8f66fdedc7adf7024c379873d888efa3);
+            
+    
+            var marker_971adc0fa50afa334e06dbd008005a90 = L.marker(
+                [31.9635712, 34.8101149],
+                {
+}
+            ).addTo(map_d2ec76b56689b43a5d8b9e95f7631a43);
+        
+    
+        var popup_8588c09f4f17b2fabbc2a04fc595af98 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_44c376014d720430464eed1715b833d0 = $(`<div id="html_44c376014d720430464eed1715b833d0" style="width: 100.0%; height: 100.0%;">2: Rishon LeTsion</div>`)[0];
+                popup_8588c09f4f17b2fabbc2a04fc595af98.setContent(html_44c376014d720430464eed1715b833d0);
+            
+        
+
+        marker_971adc0fa50afa334e06dbd008005a90.bindPopup(popup_8588c09f4f17b2fabbc2a04fc595af98)
+        ;
+
+        
+    
+    
+            marker_971adc0fa50afa334e06dbd008005a90.bindTooltip(
+                `<div>
+                     2: Rishon LeTsion
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_4d8d550808e253bef7d50294793c2533 = L.marker(
+                [31.7977314, 34.6529922],
+                {
+}
+            ).addTo(map_d2ec76b56689b43a5d8b9e95f7631a43);
+        
+    
+        var popup_7a2646527532b17a198f2d9d230bdc88 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b8b0a25d342edc433fbec4506d6908b9 = $(`<div id="html_b8b0a25d342edc433fbec4506d6908b9" style="width: 100.0%; height: 100.0%;">3: Ashdod</div>`)[0];
+                popup_7a2646527532b17a198f2d9d230bdc88.setContent(html_b8b0a25d342edc433fbec4506d6908b9);
+            
+        
+
+        marker_4d8d550808e253bef7d50294793c2533.bindPopup(popup_7a2646527532b17a198f2d9d230bdc88)
+        ;
+
+        
+    
+    
+            marker_4d8d550808e253bef7d50294793c2533.bindTooltip(
+                `<div>
+                     3: Ashdod
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_964fb91a82039847d495217bd2bd2f48 = L.marker(
+                [31.2457442, 34.7925181],
+                {
+}
+            ).addTo(map_d2ec76b56689b43a5d8b9e95f7631a43);
+        
+    
+        var popup_a9757a54c58ed5a8d68cddf06aa90564 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_43872c299bbb8aab429b4bb8a39da333 = $(`<div id="html_43872c299bbb8aab429b4bb8a39da333" style="width: 100.0%; height: 100.0%;">4: Be'er Sheva</div>`)[0];
+                popup_a9757a54c58ed5a8d68cddf06aa90564.setContent(html_43872c299bbb8aab429b4bb8a39da333);
+            
+        
+
+        marker_964fb91a82039847d495217bd2bd2f48.bindPopup(popup_a9757a54c58ed5a8d68cddf06aa90564)
+        ;
+
+        
+    
+    
+            marker_964fb91a82039847d495217bd2bd2f48.bindTooltip(
+                `<div>
+                     4: Be'er Sheva
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_bb9d946b18eba452899d4a3268b5cd44 = L.marker(
+                [32.0877639, 34.8859985],
+                {
+}
+            ).addTo(map_d2ec76b56689b43a5d8b9e95f7631a43);
+        
+    
+        var popup_13fe323d5fc7beec075708bfb11aa4e4 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_1d7fe38eebf651bfcb8c72e741b934cf = $(`<div id="html_1d7fe38eebf651bfcb8c72e741b934cf" style="width: 100.0%; height: 100.0%;">5: Petah Tikva</div>`)[0];
+                popup_13fe323d5fc7beec075708bfb11aa4e4.setContent(html_1d7fe38eebf651bfcb8c72e741b934cf);
+            
+        
+
+        marker_bb9d946b18eba452899d4a3268b5cd44.bindPopup(popup_13fe323d5fc7beec075708bfb11aa4e4)
+        ;
+
+        
+    
+    
+            marker_bb9d946b18eba452899d4a3268b5cd44.bindTooltip(
+                `<div>
+                     5: Petah Tikva
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var poly_line_ba8121c1e15e53d7654fc513c46a9753 = L.polyline(
+                [[32.3286181, 34.8566246], [31.9635712, 34.8101149], [31.7977314, 34.6529922], [31.2457442, 34.7925181], [32.0877639, 34.8859985], [32.3286181, 34.8566246]],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1, "smoothFactor": 1.0, "stroke": true, "weight": 2.5}
+            ).addTo(map_d2ec76b56689b43a5d8b9e95f7631a43);
+        
+</script>
+</html>
